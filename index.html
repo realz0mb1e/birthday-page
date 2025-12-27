@@ -156,82 +156,6 @@
             box-shadow: 0 0 30px rgba(255, 128, 170, 0.8);
         }
 
-        /* 视频播放器容器 - 添加淡入淡出过渡 */
-        .video-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: rgba(0, 0, 0, 0.9);
-            display: flex; /* 改为flex，通过opacity控制显示隐藏 */
-            opacity: 0; /* 初始透明 */
-            pointer-events: none; /* 初始不可点击 */
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 999;
-            transition: opacity 0.8s ease; /* 淡入淡出过渡动画 */
-        }
-
-        /* 视频容器显示状态 */
-        .video-container.show {
-            opacity: 1;
-            pointer-events: auto; /* 可点击 */
-        }
-
-        /* 退出按钮 */
-        .exit-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            padding: 0.5rem 1rem;
-            background-color: #ff4444;
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            font-size: clamp(1rem, 2vw, 1.2rem);
-            cursor: pointer;
-        }
-
-        /* 视频元素 */
-        #birthday-video {
-            width: clamp(300px, 80vw, 1200px);
-            height: auto;
-            border-radius: 10px;
-            /* 视频自身也添加淡入动画 */
-            opacity: 0;
-            transition: opacity 0.8s ease 0.2s; /* 延迟0.2s淡入，更自然 */
-        }
-
-        /* 视频容器显示时，视频淡入 */
-        .video-container.show #birthday-video {
-            opacity: 1;
-        }
-
-        /* 重新播放按钮（视频结束后） */
-        .replay-btn {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 1rem 2rem;
-            background-color: #ff80aa;
-            color: #fff;
-            border: none;
-            border-radius: 50px;
-            font-size: clamp(1rem, 2.5vw, 1.5rem);
-            cursor: pointer;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            display: none;
-        }
-
-        /* 视频模糊样式（结束后） */
-        .video-blur {
-            filter: blur(8px);
-        }
-
         /* 音乐开关按钮样式 - 右上角小尺寸圆角 */
         .music-switch {
             position: absolute;
@@ -257,6 +181,87 @@
             background-color: #ff69b4;
             color: #fff;
             box-shadow: 0 0 20px rgba(255, 105, 180, 0.6);
+        }
+
+        /* 视频播放器容器 - 添加淡入淡出过渡 + 全屏适配 */
+        .video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 999;
+            transition: opacity 0.8s ease;
+            padding: 20px; /* 防止视频边缘溢出 */
+        }
+
+        /* 视频容器显示状态 */
+        .video-container.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* 退出按钮 */
+        .exit-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 0.5rem 1rem;
+            background-color: #ff4444;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            cursor: pointer;
+            z-index: 1000; /* 高于视频层级 */
+        }
+
+        /* 视频元素 - 全屏适配（保持比例，不超出屏幕） */
+        #birthday-video {
+            max-width: 100%;
+            max-height: 90vh; /* 留顶部空间给退出按钮 */
+            width: auto;
+            height: auto;
+            border-radius: 10px;
+            opacity: 0;
+            transition: opacity 0.8s ease 0.2s;
+            object-fit: contain; /* 保持视频比例，适配不同屏幕 */
+        }
+
+        /* 视频容器显示时，视频淡入 */
+        .video-container.show #birthday-video {
+            opacity: 1;
+        }
+
+        /* 重新播放按钮（视频结束后） */
+        .replay-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 1rem 2rem;
+            background-color: #ff80aa;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            display: none;
+            z-index: 1000;
+        }
+
+        /* 视频模糊样式（结束后） */
+        .video-blur {
+            filter: blur(8px);
         }
     </style>
 </head>
@@ -319,8 +324,10 @@
         
         // 音效元素（本地生日歌）
         const birthdaySong = document.getElementById('birthday-song');
-        // 记录生日歌暂停位置（用于恢复播放，不重置）
-        let birthdaySongPausedTime = 0;
+        // 记录原始音量（用于恢复）
+        const originalVolume = 0.2;
+        // 视频播放时的背景音乐音量（调小到20%）
+        const videoModeVolume = 0.07;
         // 音乐开关状态（默认开启）
         let isMusicOn = true;
 
@@ -357,6 +364,8 @@
         // 页面加载后启动文字特效
         window.onload = () => {
             textFade();
+            // 初始化音频音量
+            birthdaySong.volume = originalVolume;
         };
 
         // 步骤2：点击启动按钮 - 隐藏按钮，切换背景，淡入彩炮、蛋糕、标题、音乐开关
@@ -392,13 +401,9 @@
             }, 500);
         });
 
-        // 播放本地生日歌函数（含失败提示，恢复时从暂停位置继续）
+        // 播放本地生日歌函数
         function playBirthdaySong() {
             if (!isMusicOn) return; // 如果音乐开关关闭，不播放
-            // 恢复暂停位置（不重置为0，实现暂停后继续播放）
-            if (birthdaySongPausedTime > 0) {
-                birthdaySong.currentTime = birthdaySongPausedTime;
-            }
             // 尝试播放
             birthdaySong.play().then(() => {
                 console.log('本地生日歌播放/恢复成功');
@@ -413,29 +418,26 @@
             });
         }
 
-        // 音乐开关按钮点击事件 - 切换【暂停/继续播放】（非停止/重置）
+        // 音乐开关按钮点击事件 - 切换【暂停/继续播放】
         musicSwitchBtn.addEventListener('click', () => {
             isMusicOn = !isMusicOn;
             if (isMusicOn) {
-                // 开启音乐：从暂停位置继续播放
+                // 开启音乐：恢复音量并播放
+                birthdaySong.volume = videoContainer.classList.contains('show') ? videoModeVolume : originalVolume;
                 playBirthdaySong();
                 musicSwitchBtn.textContent = '🔊';
             } else {
-                // 关闭音乐：仅暂停（记录当前播放位置，不重置）
-                if (!birthdaySong.paused) {
-                    birthdaySongPausedTime = birthdaySong.currentTime; // 记录暂停点
-                    birthdaySong.pause(); // 暂停音频，而非停止
-                }
+                // 关闭音乐：暂停音频
+                birthdaySong.pause();
                 musicSwitchBtn.textContent = '🔇';
             }
         });
 
-        // 步骤3：点击视频按钮 - 淡入视频播放器，暂停背景音乐
+        // 步骤3：点击视频按钮 - 淡入视频播放器，调小背景音乐音量
         videoBtn.addEventListener('click', () => {
-            // 暂停生日歌并记录当前播放位置
+            // 调小背景音乐音量（仅当音乐开启时）
             if (isMusicOn && !birthdaySong.paused) {
-                birthdaySongPausedTime = birthdaySong.currentTime;
-                birthdaySong.pause();
+                birthdaySong.volume = videoModeVolume;
             }
             // 添加show类触发淡入
             videoContainer.classList.add('show');
@@ -447,7 +449,7 @@
             }, 300);
         });
 
-        // 步骤4：退出按钮 - 淡出视频播放器，恢复背景音乐
+        // 步骤4：退出按钮 - 淡出视频播放器，恢复背景音乐音量
         exitBtn.addEventListener('click', () => {
             // 移除show类触发淡出
             videoContainer.classList.remove('show');
@@ -459,12 +461,9 @@
                 replayBtn.style.display = 'none';
                 replayBtn.style.opacity = '0';
                 
-                // 恢复生日歌播放（从暂停位置继续，仅当音乐开关开启时）
-                if (isMusicOn && birthdaySongPausedTime > 0) {
-                    birthdaySong.currentTime = birthdaySongPausedTime;
-                    birthdaySong.play().catch(err => {
-                        console.log('恢复生日歌失败:', err);
-                    });
+                // 恢复背景音乐音量（仅当音乐开启时）
+                if (isMusicOn && !birthdaySong.paused) {
+                    birthdaySong.volume = originalVolume;
                 }
             }, 800);
         });
@@ -478,7 +477,7 @@
             }, 500);
         });
 
-        // 步骤6：重新播放按钮 - 重新播放视频（保持背景音乐暂停）
+        // 步骤6：重新播放按钮 - 重新播放视频（保持背景音乐低音量）
         replayBtn.addEventListener('click', () => {
             videoEl.classList.remove('video-blur');
             replayBtn.style.opacity = '0';
@@ -486,15 +485,26 @@
                 replayBtn.style.display = 'none';
                 videoEl.currentTime = 0;
                 videoEl.play();
+                // 确保背景音乐保持低音量
+                if (isMusicOn && !birthdaySong.paused) {
+                    birthdaySong.volume = videoModeVolume;
+                }
             }, 500);
         });
 
-        // 监听视频手动播放/暂停事件，同步控制背景音乐
+        // 监听视频手动播放/暂停事件，同步调整背景音乐音量
         videoEl.addEventListener('play', () => {
-            // 视频播放时暂停生日歌
+            // 视频播放时调小背景音乐音量
             if (isMusicOn && !birthdaySong.paused) {
-                birthdaySongPausedTime = birthdaySong.currentTime;
-                birthdaySong.pause();
+                birthdaySong.volume = videoModeVolume;
+            }
+        });
+
+        // 监听视频暂停事件（手动暂停），恢复背景音乐音量
+        videoEl.addEventListener('pause', () => {
+            // 排除视频播放结束的情况
+            if (videoEl.currentTime < videoEl.duration && isMusicOn && !birthdaySong.paused) {
+                birthdaySong.volume = originalVolume;
             }
         });
 
