@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday</title>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            /* 生日主题字体，适配不同系统 */
+            font-family: "Comic Sans MS", "华文琥珀", "幼圆", "微软雅黑", sans-serif;
+        }
+
+        /* 初始全屏黑色背景 */
+        body {
+            width: 100vw;
+            height: 100vh;
+            background-color: #000;
+            overflow: hidden;
+            position: relative;
+            /* 背景色过渡动画 */
+            transition: background-color 0.8s ease;
+        }
+
+        /* 生日主题背景色（点击按钮后添加）- 改为温馨的浅桃粉色 */
+        body.birthday-bg {
+            background-color: #ffe8f0; /* 暖调生日背景，非纯白，更有氛围感 */
+        }
+
+        /* 居中文字样式 - 生日提示文字 */
+        .birthday-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            /* 响应式字体：最小2rem，最大4rem，随屏幕宽度自适应 */
+            font-size: clamp(2rem, 5vw, 4rem);
+            opacity: 0;
+            /* 淡入淡出过渡动画 */
+            transition: opacity 0.8s ease;
+            text-align: center;
+            width: 90%;
+        }
+
+        /* 启动按钮样式 - 白色圆角按钮 */
+        .start-btn {
+            position: absolute;
+            bottom: 20%;
+            left: 50%;
+            transform: translate(-50%, 0);
+            padding: clamp(0.8rem, 2vw, 1.5rem) clamp(1.5rem, 4vw, 3rem);
+            background-color: #fff;
+            color: #ff69b4;
+            border: none;
+            border-radius: 50px;
+            font-size: clamp(1rem, 2.5vw, 1.8rem);
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+            box-shadow: 0 0 20px rgba(255, 105, 180, 0.5);
+            z-index: 10;
+        }
+
+        .start-btn:hover {
+            background-color: #ff69b4;
+            color: #fff;
+            box-shadow: 0 0 30px rgba(255, 105, 180, 0.8);
+        }
+
+        /* 彩炮容器 - 基于按钮位置对称，调整位置避免遮挡蛋糕 */
+        .cannons {
+            position: absolute;
+            bottom: 10%; /* 向下调整，远离蛋糕区域 */
+            left: 50%;
+            transform: translate(-50%, 0);
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+            z-index: 5;
+        }
+
+        /* 彩炮emoji样式 - 尺寸为蛋糕的1/2（蛋糕放大后同步放大） */
+        .cannon {
+            /* 蛋糕放大1倍后是clamp(200px,50vw,600px)，这里取1/2 */
+            font-size: clamp(100px, 25vw, 300px);
+            line-height: 1;
+        }
+
+        /* 左侧彩炮 - 间距提高3倍 */
+        .cannon-left {
+            margin-right: clamp(16rem, 40vw, 30rem); /* 原8rem×3=24rem */
+        }
+
+        /* 右侧彩炮 - 间距提高3倍 */
+        .cannon-right {
+            margin-left: clamp(16rem, 40vw, 30rem); /* 原em×3=24rem */
+        }
+
+        /* 蛋糕Emoji样式 - 放大1倍 */
+        .cake-emoji {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            /* 原尺寸×2：最小200px，最大600px */
+            font-size: clamp(200px, 50vw, 600px);
+            line-height: 1;
+            opacity: 0;
+            transition: opacity 1s ease;
+            z-index: 4; /* 低于彩炮层级，避免遮挡 */
+        }
+
+        /* Happy Birthday标题 - 上移避免被蛋糕遮挡，更换颜色 */
+        .happy-title {
+            position: absolute;
+            top: 10%; /* 从20%上移到10%，远离蛋糕区域 */
+            left: 50%;
+            transform: translate(-50%, 0);
+            color: #e63970; /* 更深的玫粉色，与浅桃色背景对比更明显 */
+            font-size: clamp(2.5rem, 6vw, 5rem);
+            text-shadow: 0 0 20px #ffcce5;
+            opacity: 0;
+            transition: opacity 1s ease;
+            z-index: 6;
+        }
+
+        /* 视频播放按钮 - 调整颜色避免重合，位置微调 */
+        .video-btn {
+            position: absolute;
+            bottom: 5%; /* 上移避免与彩炮重叠 */
+            left: 50%;
+            transform: translate(-50%, 0);
+            padding: clamp(0.8rem, 2vw, 1.5rem) clamp(1.5rem, 4vw, 3rem);
+            background-color: #ff80aa; /* 中粉色，与背景和标题都区分 */
+            color: #ffffff;
+            border: none;
+            border-radius: 50px;
+            font-size: clamp(1rem, 2.5vw, 1.8rem);
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 1s ease;
+            box-shadow: 0 0 20px rgba(255, 128, 170, 0.5);
+            z-index: 7;
+        }
+
+        .video-btn:hover {
+            background-color: #ffffff;
+            color: #ff80aa;
+            box-shadow: 0 0 30px rgba(255, 128, 170, 0.8);
+        }
+
+        /* 视频播放器容器 - 添加淡入淡出过渡 */
+        .video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex; /* 改为flex，通过opacity控制显示隐藏 */
+            opacity: 0; /* 初始透明 */
+            pointer-events: none; /* 初始不可点击 */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            transition: opacity 0.8s ease; /* 淡入淡出过渡动画 */
+        }
+
+        /* 视频容器显示状态 */
+        .video-container.show {
+            opacity: 1;
+            pointer-events: auto; /* 可点击 */
+        }
+
+        /* 退出按钮 */
+        .exit-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 0.5rem 1rem;
+            background-color: #ff4444;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            cursor: pointer;
+        }
+
+        /* 视频元素 */
+        #birthday-video {
+            width: clamp(300px, 80vw, 1200px);
+            height: auto;
+            border-radius: 10px;
+            /* 视频自身也添加淡入动画 */
+            opacity: 0;
+            transition: opacity 0.8s ease 0.2s; /* 延迟0.2s淡入，更自然 */
+        }
+
+        /* 视频容器显示时，视频淡入 */
+        .video-container.show #birthday-video {
+            opacity: 1;
+        }
+
+        /* 重新播放按钮（视频结束后） */
+        .replay-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 1rem 2rem;
+            background-color: #ff80aa;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            font-size: clamp(1rem, 2.5vw, 1.5rem);
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            display: none;
+        }
+
+        /* 视频模糊样式（结束后） */
+        .video-blur {
+            filter: blur(8px);
+        }
+
+        /* 音乐开关按钮样式 - 右上角小尺寸圆角 */
+        .music-switch {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: clamp(40px, 5vw, 60px);
+            height: clamp(40px, 5vw, 60px);
+            border-radius: 50%; /* 圆形圆角 */
+            background-color: rgba(255, 255, 255, 0.9);
+            border: none;
+            box-shadow: 0 0 15px rgba(255, 105, 180, 0.3);
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0; /* 初始隐藏，蛋糕出现后0.2s显示 */
+            transition: opacity 0.3s ease, background-color 0.3s ease;
+            z-index: 99; /* 最高层级，不被遮挡 */
+        }
+
+        .music-switch:hover {
+            background-color: #ff69b4;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(255, 105, 180, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <!-- 淡入淡出文字 -->
+    <div class="birthday-text">谢谢你无数个日夜的辛苦奉献</div>
+
+    <!-- 启动按钮 -->
+    <button class="start-btn">点击开启惊喜</button>
+
+    <!-- 彩炮容器（替换为emoji） -->
+    <div class="cannons">
+        <div class="cannon cannon-left">🎆</div>
+        <div class="cannon cannon-right">🎆</div>
+    </div>
+
+    <!-- 蛋糕Emoji -->
+    <div class="cake-emoji">🎂</div>
+
+    <!-- Happy Birthday标题 -->
+    <div class="happy-title">Happy Birthday！</div>
+
+    <!-- 视频播放按钮 -->
+    <button class="video-btn">播放生日视频 🎬</button>
+
+    <!-- 音乐开关按钮 - 右上角 -->
+    <button class="music-switch" id="musicSwitch">🔊</button>
+
+    <!-- 视频播放器容器 -->
+    <div class="video-container">
+        <button class="exit-btn">退出 ❌</button>
+        <video id="birthday-video" controls>
+            <!-- 替换为你的本地视频路径 -->
+            <source src="./birthday-video.mp4" type="video/mp4">
+            你的浏览器不支持视频播放，请更换浏览器重试。
+        </video>
+        <button class="replay-btn">重新播放 🔄</button>
+    </div>
+
+    <!-- 生日歌音效（本地文件，替换为你的本地MP3路径） -->
+    <audio id="birthday-song" preload="auto" loop>
+        <source src="./birthday-song.mp3" type="audio/mpeg">
+        你的浏览器不支持音频播放，请更换浏览器重试。
+    </audio>
+
+    <script>
+        // 获取DOM元素
+        const textEl = document.querySelector('.birthday-text');
+        const startBtn = document.querySelector('.start-btn');
+        const cannonsEl = document.querySelector('.cannons');
+        const cakeEmoji = document.querySelector('.cake-emoji');
+        const happyTitle = document.querySelector('.happy-title');
+        const videoBtn = document.querySelector('.video-btn');
+        const videoContainer = document.querySelector('.video-container');
+        const videoEl = document.getElementById('birthday-video');
+        const exitBtn = document.querySelector('.exit-btn');
+        const replayBtn = document.querySelector('.replay-btn');
+        const bodyEl = document.body;
+        const musicSwitchBtn = document.getElementById('musicSwitch'); // 音乐开关
+        
+        // 音效元素（本地生日歌）
+        const birthdaySong = document.getElementById('birthday-song');
+        // 记录生日歌暂停位置（用于恢复播放，不重置）
+        let birthdaySongPausedTime = 0;
+        // 音乐开关状态（默认开启）
+        let isMusicOn = true;
+
+        // 文字内容数组
+        const textContents = [
+            "谢谢你无数个日夜的辛苦奉献",
+            "生日快乐🎉",
+            "我最亲爱的老妈"
+        ];
+        
+        // 步骤1：文字淡入淡出重复三次（间隔调整为0.8s）
+        let textShowCount = 0;
+        function textFade() {
+            // 更新文字内容
+            textEl.textContent = textContents[textShowCount];
+            // 淡入文字
+            textEl.style.opacity = '1';
+            // 2秒后淡出
+            setTimeout(() => {
+                textEl.style.opacity = '0';
+                textShowCount++;
+                // 间隔调整为0.8秒（800ms）
+                if (textShowCount < 3) {
+                    setTimeout(textFade, 800); // 原500ms改为800ms
+                } else {
+                    // 三次后显示启动按钮
+                    setTimeout(() => {
+                        startBtn.style.opacity = '1';
+                    }, 800); // 同步调整为0.8秒
+                }
+            }, 2000);
+        }
+
+        // 页面加载后启动文字特效
+        window.onload = () => {
+            textFade();
+        };
+
+        // 步骤2：点击启动按钮 - 隐藏按钮，切换背景，淡入彩炮、蛋糕、标题、音乐开关
+        startBtn.addEventListener('click', () => {
+            // 隐藏启动按钮
+            startBtn.style.opacity = '0';
+            // 切换为生日主题背景色
+            bodyEl.classList.add('birthday-bg');
+            // 延迟0.5秒淡入彩炮
+            setTimeout(() => {
+                cannonsEl.style.opacity = '1';
+                
+                // 彩炮显示后0.5秒淡入蛋糕
+                setTimeout(() => {
+                    cakeEmoji.style.opacity = '1';
+                    
+                    // 蛋糕出现后0.2秒（200ms）显示音乐开关并尝试播放本地生日歌
+                    setTimeout(() => {
+                        musicSwitchBtn.style.opacity = '1';
+                        // 播放本地生日歌
+                        playBirthdaySong();
+                    }, 200);
+                    
+                    // 延迟1秒淡入Happy Birthday标题
+                    setTimeout(() => {
+                        happyTitle.style.opacity = '1';
+                        // 再延迟1秒淡入视频按钮
+                        setTimeout(() => {
+                            videoBtn.style.opacity = '1';
+                        }, 1000);
+                    }, 1000);
+                }, 500);
+            }, 500);
+        });
+
+        // 播放本地生日歌函数（含失败提示，恢复时从暂停位置继续）
+        function playBirthdaySong() {
+            if (!isMusicOn) return; // 如果音乐开关关闭，不播放
+            // 恢复暂停位置（不重置为0，实现暂停后继续播放）
+            if (birthdaySongPausedTime > 0) {
+                birthdaySong.currentTime = birthdaySongPausedTime;
+            }
+            // 尝试播放
+            birthdaySong.play().then(() => {
+                console.log('本地生日歌播放/恢复成功');
+                musicSwitchBtn.textContent = '🔊'; // 确保开关显示开启状态
+            }).catch(err => {
+                console.error('本地生日歌播放失败:', err);
+                // 弹出错误提醒
+                alert('生日歌播放失败！请检查本地音频文件路径是否正确，或浏览器是否允许音频自动播放。');
+                // 切换音乐开关为关闭状态
+                isMusicOn = false;
+                musicSwitchBtn.textContent = '🔇';
+            });
+        }
+
+        // 音乐开关按钮点击事件 - 切换【暂停/继续播放】（非停止/重置）
+        musicSwitchBtn.addEventListener('click', () => {
+            isMusicOn = !isMusicOn;
+            if (isMusicOn) {
+                // 开启音乐：从暂停位置继续播放
+                playBirthdaySong();
+                musicSwitchBtn.textContent = '🔊';
+            } else {
+                // 关闭音乐：仅暂停（记录当前播放位置，不重置）
+                if (!birthdaySong.paused) {
+                    birthdaySongPausedTime = birthdaySong.currentTime; // 记录暂停点
+                    birthdaySong.pause(); // 暂停音频，而非停止
+                }
+                musicSwitchBtn.textContent = '🔇';
+            }
+        });
+
+        // 步骤3：点击视频按钮 - 淡入视频播放器，暂停背景音乐
+        videoBtn.addEventListener('click', () => {
+            // 暂停生日歌并记录当前播放位置
+            if (isMusicOn && !birthdaySong.paused) {
+                birthdaySongPausedTime = birthdaySong.currentTime;
+                birthdaySong.pause();
+            }
+            // 添加show类触发淡入
+            videoContainer.classList.add('show');
+            // 自动播放本地视频
+            setTimeout(() => {
+                videoEl.play().catch(err => {
+                    console.log('视频自动播放失败，请手动点击播放:', err);
+                });
+            }, 300);
+        });
+
+        // 步骤4：退出按钮 - 淡出视频播放器，恢复背景音乐
+        exitBtn.addEventListener('click', () => {
+            // 移除show类触发淡出
+            videoContainer.classList.remove('show');
+            // 延迟重置视频状态，等淡出动画完成
+            setTimeout(() => {
+                videoEl.pause();
+                videoEl.currentTime = 0;
+                videoEl.classList.remove('video-blur');
+                replayBtn.style.display = 'none';
+                replayBtn.style.opacity = '0';
+                
+                // 恢复生日歌播放（从暂停位置继续，仅当音乐开关开启时）
+                if (isMusicOn && birthdaySongPausedTime > 0) {
+                    birthdaySong.currentTime = birthdaySongPausedTime;
+                    birthdaySong.play().catch(err => {
+                        console.log('恢复生日歌失败:', err);
+                    });
+                }
+            }, 800);
+        });
+
+        // 步骤5：视频结束后 - 模糊+显示重新播放按钮
+        videoEl.addEventListener('ended', () => {
+            videoEl.classList.add('video-blur');
+            replayBtn.style.display = 'block';
+            setTimeout(() => {
+                replayBtn.style.opacity = '1';
+            }, 500);
+        });
+
+        // 步骤6：重新播放按钮 - 重新播放视频（保持背景音乐暂停）
+        replayBtn.addEventListener('click', () => {
+            videoEl.classList.remove('video-blur');
+            replayBtn.style.opacity = '0';
+            setTimeout(() => {
+                replayBtn.style.display = 'none';
+                videoEl.currentTime = 0;
+                videoEl.play();
+            }, 500);
+        });
+
+        // 监听视频手动播放/暂停事件，同步控制背景音乐
+        videoEl.addEventListener('play', () => {
+            // 视频播放时暂停生日歌
+            if (isMusicOn && !birthdaySong.paused) {
+                birthdaySongPausedTime = birthdaySong.currentTime;
+                birthdaySong.pause();
+            }
+        });
+
+        // 页面离开时停止音效
+        window.addEventListener('beforeunload', () => {
+            birthdaySong.pause();
+        });
+    </script>
+</body>
+</html>
